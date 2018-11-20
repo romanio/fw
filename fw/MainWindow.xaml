@@ -1,0 +1,78 @@
+﻿<metro:MetroWindow x:Class="fw.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+        xmlns:oxy ="http://oxyplot.org/wpf"
+        xmlns:grid="http://propertytools.org/wpf"
+        xmlns:local="clr-namespace:fw"
+        mc:Ignorable="d"
+        Title="FIeld Worker" Height="595" Width="655.5" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="3, 3, 3, 3">
+            <Button Margin="6, 3, 12, 3" MinWidth="120" Click="Button_Click">Open BD</Button>
+        </StackPanel>
+
+        <Grid Grid.Row="1" Grid.Column="0" Margin="12, 3, 3, 12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Column="0" Grid.Row="0" >Layers</Label>
+            <ListBox MinWidth="120" Grid.Column="0" Grid.Row="1" ItemsSource="{Binding layers}" AlternationCount="1" BorderThickness="0" SelectionMode="Extended" SelectionChanged="ListBox_SelectionChanged_1"></ListBox>
+            <Label Grid.Column="0" Grid.Row="2">Wellnames</Label>
+            <ListBox Grid.Column="0" Grid.Row="3" ScrollViewer.VerticalScrollBarVisibility="Visible" ItemsSource="{Binding wellnames}" BorderThickness="0" SelectionMode="Extended" SelectionChanged="ListBox_SelectionChanged"></ListBox>
+            <CheckBox Margin="3, 12, 3, 3" Name="checkRates" Grid.Row="4" Content="Is Rates?" Click="checkRates_Click" IsChecked="{Binding IsRateProduction}"/>
+        </Grid>
+        <TabControl  Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="3, 3, 3, 3">
+            <TabItem Header="Chart">
+                <Grid Margin="3, 3, 3, 3">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <oxy:PlotView Grid.Column="0" Grid.Row="0" Model="{Binding OxyModel}" />
+                </Grid>
+
+            </TabItem>
+            <TabItem Header="Data">
+                <Grid Margin="3, 3, 3, 3">
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <grid:DataGrid  ItemsSource="{Binding Cells}">
+                        <grid:DataGrid.ColumnDefinitions>
+                          
+                        </grid:DataGrid.ColumnDefinitions>
+                    </grid:DataGrid>
+                </Grid>
+
+            </TabItem>
+
+        </TabControl>
+
+
+    </Grid>
+
+</metro:MetroWindow>
