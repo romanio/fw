@@ -28,7 +28,7 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto" MinHeight="80"/>
                 <RowDefinition Height="auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="auto"/>
@@ -36,10 +36,16 @@
             <Label Grid.Column="0" Grid.Row="0" >Layers</Label>
             <ListBox MinWidth="120" Grid.Column="0" Grid.Row="1" ItemsSource="{Binding layers}" AlternationCount="1" BorderThickness="0" SelectionMode="Extended" SelectionChanged="ListBox_SelectionChanged_1"></ListBox>
             <Label Grid.Column="0" Grid.Row="2">Wellnames</Label>
-            <ListBox Grid.Column="0" Grid.Row="3" ScrollViewer.VerticalScrollBarVisibility="Visible" ItemsSource="{Binding wellnames}" BorderThickness="0" SelectionMode="Extended" SelectionChanged="ListBox_SelectionChanged"></ListBox>
+            <ListBox  Grid.Column="0" Grid.Row="3"  ItemsSource="{Binding wellnames}"  >
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <VirtualizingStackPanel  />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+            </ListBox>
             <CheckBox Margin="3, 12, 3, 3" Name="checkRates" Grid.Row="4" Content="Is Rates?" Click="checkRates_Click" IsChecked="{Binding IsRateProduction}"/>
         </Grid>
-        <TabControl  Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="3, 3, 3, 3">
+        <TabControl  Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="3, 3, 3, 3" IsSynchronizedWithCurrentItem="False">
             <TabItem Header="Chart">
                 <Grid Margin="3, 3, 3, 3">
                     <Grid.RowDefinitions>
