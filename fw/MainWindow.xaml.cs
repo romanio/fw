@@ -43,7 +43,7 @@ namespace fw
         List<string> SelectedLayers = new List<string>();
         List<string> SelectedWells = new List<string>();
 
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void OnWellnamesSelected(object sender, SelectionChangedEventArgs e)
         {
             var tmp = (sender as ListBox).SelectedItems;
             SelectedWells.Clear();
@@ -55,7 +55,7 @@ namespace fw
             UpdateChart();
         }
 
-        private void ListBox_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
+        private void OnLayersSelected(object sender, SelectionChangedEventArgs e)
         {
             SelectedLayers.Clear();
             var tmp = (sender as ListBox).SelectedItems;

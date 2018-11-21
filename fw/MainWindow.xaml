@@ -8,53 +8,47 @@
         xmlns:grid="http://propertytools.org/wpf"
         xmlns:local="clr-namespace:fw"
         mc:Ignorable="d"
-        Title="FIeld Worker" Height="595" Width="655.5" WindowStartupLocation="CenterScreen">
-    <Grid>
+        Title="FIeld Worker" Height="529" Width="602.7" WindowStartupLocation="CenterScreen">
+    <Grid Margin="3, 3, 3, 3">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="3, 3, 3, 3">
             <Button Margin="6, 3, 12, 3" MinWidth="120" Click="Button_Click">Open BD</Button>
         </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="0" Margin="12">
+            <Label >Layers</Label>
+            <ListBox MinWidth="120" MinHeight="120"
+                     ItemsSource="{Binding layers}"
+                     SelectionMode="Extended" 
+                     SelectionChanged="OnLayersSelected"></ListBox>
+            <Label >Wellnames</Label>
+            <ListBox 
+                MinHeight="120"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                      ItemsSource="{Binding wellnames}" 
+                      SelectionMode="Extended" 
+                      SelectionChanged="OnWellnamesSelected" />
+        </StackPanel>
 
-        <Grid Grid.Row="1" Grid.Column="0" Margin="12, 3, 3, 12">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="auto" MinHeight="80"/>
-                <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="auto"/>
-            </Grid.RowDefinitions>
-            <Label Grid.Column="0" Grid.Row="0" >Layers</Label>
-            <ListBox MinWidth="120" Grid.Column="0" Grid.Row="1" ItemsSource="{Binding layers}" AlternationCount="1" BorderThickness="0" SelectionMode="Extended" SelectionChanged="ListBox_SelectionChanged_1"></ListBox>
-            <Label Grid.Column="0" Grid.Row="2">Wellnames</Label>
-            <ListBox  Grid.Column="0" Grid.Row="3"  ItemsSource="{Binding wellnames}"  >
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VirtualizingStackPanel  />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-            </ListBox>
-            <CheckBox Margin="3, 12, 3, 3" Name="checkRates" Grid.Row="4" Content="Is Rates?" Click="checkRates_Click" IsChecked="{Binding IsRateProduction}"/>
-        </Grid>
         <TabControl  Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="3, 3, 3, 3" IsSynchronizedWithCurrentItem="False">
             <TabItem Header="Chart">
                 <Grid Margin="3, 3, 3, 3">
                     <Grid.RowDefinitions>
                         <RowDefinition/>
+                        <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <oxy:PlotView Grid.Column="0" Grid.Row="0" Model="{Binding OxyModel}" />
+                    <CheckBox Margin="3, 12, 3, 3" Name="checkRates" Grid.Row="1" Content="Is Rates?" Click="checkRates_Click" IsChecked="{Binding IsRateProduction}"/>
+
                 </Grid>
 
             </TabItem>
@@ -69,7 +63,8 @@
 
                     <grid:DataGrid  ItemsSource="{Binding Cells}">
                         <grid:DataGrid.ColumnDefinitions>
-                          
+                        
+
                         </grid:DataGrid.ColumnDefinitions>
                     </grid:DataGrid>
                 </Grid>
