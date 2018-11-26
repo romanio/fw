@@ -7,12 +7,33 @@ using System.Threading.Tasks;
 using OxyPlot;
 using OxyPlot.Series;
 using OxyPlot.Axes;
+using OxyPlot.Annotations;
 using System.Data;
 using System.Collections;
 using System.Collections.ObjectModel;
 
 namespace fw
 {
+    public class CustomTextAnnotation : Annotation
+    {
+        public CustomTextAnnotation()
+        { }
+
+        public string Text { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+
+        public override void Render(IRenderContext rc)
+        {
+            base.Render(rc);
+            double pX = X;//PlotModel.PlotArea.Left + X;
+            double pY = PlotModel.PlotArea.Top + Y;
+           
+            rc.DrawMultilineText(new ScreenPoint(pX, pY), Text, TextColor, Font, FontSize, FontWeight);
+            rc.DrawRectangle(new OxyRect(new ScreenPoint(PlotModel.PlotArea.Left, PlotModel.PlotArea.Bottom), new OxySize(100, 100)), OxyColors.Red, OxyColors.Undefined);
+        }
+    }
+
     class MainWindowModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -288,6 +309,16 @@ namespace fw
                 }
             }
 
+            OxyModel.Annotations.Clear();
+            OxyModel.Annotations.Add(new CustomTextAnnotation()
+            {
+                Text = "Ю2",
+                X = 110,
+                Y = 10,
+                Font = "Times New Roman",
+                FontSize = 12,
+                TextColor = OxyColors.Black
+            });
 
             OxyModel.InvalidatePlot(true);
             OnPropertyChanged("OxyModel");

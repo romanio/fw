@@ -21,21 +21,21 @@
         <StackPanel Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="3, 3, 3, 3">
             <Button Margin="6, 3, 12, 3" MinWidth="120" Click="Button_Click">Open BD</Button>
         </StackPanel>
-        <StackPanel Grid.Row="1" Grid.Column="0" Margin="12">
-            <Label >Layers</Label>
-            <ListBox MinWidth="120" MinHeight="120"
+        <DockPanel Grid.Row="1" Grid.Column="0" Margin="12" MaxHeight="400">
+            <Label DockPanel.Dock="Top">Layers</Label>
+            <ListBox MinWidth="120" MinHeight="120" DockPanel.Dock="Top"
                      ItemsSource="{Binding layers}"
                      SelectionMode="Extended" 
                      SelectionChanged="OnLayersSelected"></ListBox>
-            <Label >Wellnames</Label>
-            <ListBox 
+            <Label DockPanel.Dock="Top" >Wellnames</Label>
+            <ListBox DockPanel.Dock="Top"
                 MinHeight="120"
                       ScrollViewer.VerticalScrollBarVisibility="Auto"
                       ItemsSource="{Binding wellnames}" 
                       SelectionMode="Extended" 
                       SelectionChanged="OnWellnamesSelected" />
-        </StackPanel>
-
+            </DockPanel>
+        
         <TabControl  Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="3, 3, 3, 3" IsSynchronizedWithCurrentItem="False">
             <TabItem Header="Chart">
                 <Grid Margin="3, 3, 3, 3">
