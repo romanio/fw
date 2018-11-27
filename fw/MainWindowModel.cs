@@ -14,26 +14,6 @@ using System.Collections.ObjectModel;
 
 namespace fw
 {
-    public class CustomTextAnnotation : Annotation
-    {
-        public CustomTextAnnotation()
-        { }
-
-        public string Text { get; set; }
-        public double X { get; set; }
-        public double Y { get; set; }
-
-        public override void Render(IRenderContext rc)
-        {
-            base.Render(rc);
-            double pX = X;//PlotModel.PlotArea.Left + X;
-            double pY = PlotModel.PlotArea.Top + Y;
-           
-            rc.DrawMultilineText(new ScreenPoint(pX, pY), Text, TextColor, Font, FontSize, FontWeight);
-            rc.DrawRectangle(new OxyRect(new ScreenPoint(PlotModel.PlotArea.Left, PlotModel.PlotArea.Bottom), new OxySize(100, 100)), OxyColors.Red, OxyColors.Undefined);
-        }
-    }
-
     class MainWindowModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -41,7 +21,6 @@ namespace fw
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
-
 
         // Внешние массивы
 
@@ -64,7 +43,9 @@ namespace fw
             {
                 Font = "Segoe UI",
                 Position = AxisPosition.Bottom,
-                StringFormat = "dd.MM.yyyy"
+                StringFormat = "dd.MM.yyyy",
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot
                 
             });
 
@@ -72,9 +53,12 @@ namespace fw
             {
                 Font = "Segoe UI",
                 Position = AxisPosition.Left,
-        
+                MajorGridlineStyle = LineStyle.Solid,
+                MinorGridlineStyle = LineStyle.Dot
+
             });
 
+         
             OxyModel.LegendFont = "Segoe UI";
             OxyModel.TitleFont = "Segoe UI";
             OxyModel.TitleFontWeight = 10;
@@ -214,19 +198,16 @@ namespace fw
                  select item.pad).Distinct().ToList();
         }
 
+        double GetWCUT(Record item)
+        {
+            if (item.liquid == 0)
+                return 0;
+            else
+                return 100 * (1 - item.oil / item.liquid);
+        }
+
         public void UpdateChart(List<string> SelectedLayers, List<string> SelectedWells)
         {
-           
-            // Local function
-            Func<Record, double> wcut = (tmp) =>
-            {
-                if (tmp.liquid == 0)
-                    return 0;
-                else
-                    return 100 * (1 - tmp.oil / tmp.liquid);
-            };
-            // ****
-
             string title = "Well " + SelectedWells[0];
             for (int iw = 1; iw < SelectedWells.Count; ++iw)
                 title = title + "-" + SelectedWells[iw];
@@ -309,16 +290,89 @@ namespace fw
                 }
             }
 
+            // Layer as Annotations
+
             OxyModel.Annotations.Clear();
-            OxyModel.Annotations.Add(new CustomTextAnnotation()
+ 
+            double xmin = DateTimeAxis.ToDouble(dates[0]);
+            double xmax = DateTimeAxis.ToDouble(dates.Last());
+            double ymin = res.Min(c => c.liquid);
+            double ymax = res.Max(c => c.liquid);
+
+            string layer = null;
+            double from_pos = 0;
+            double to_pos = 0;
+
+
+            for (int it = 0; it < dates.Count; ++it)
             {
-                Text = "Ю2",
-                X = 110,
-                Y = 10,
-                Font = "Times New Roman",
-                FontSize = 12,
-                TextColor = OxyColors.Black
-            });
+                //System.Diagnostics.Debug.Write(res[it].layer);
+
+                if (res[it].layer != null)
+                {
+                    if (layer == null) // Первая встреча
+                    {
+                        layer = res[it].layer;
+                        from_pos = DateTimeAxis.ToDouble(dates[it]);
+                    }
+                    else // не первая встреча
+                    {
+                        if (res[it].layer == layer) // тот-же пласт
+                        {
+                            to_pos = DateTimeAxis.ToDouble(dates[it]);
+                        }
+                        else // какой-то другой пласт
+                        {
+                            OxyModel.Annotations.Add(new RectangleAnnotation
+                            {
+                                MinimumX = from_pos,
+                                MaximumX = to_pos,
+                                MinimumY = ymin,
+                                MaximumY = 0.1 * ymax,
+                                Fill = OxyColor.FromArgb(20, 20, 20, 20),
+                                StrokeThickness = 1,
+                                Text = layer
+                            });
+
+                            layer = res[it].layer;
+                            from_pos = DateTimeAxis.ToDouble(dates[it]);
+                        }
+                    }
+                }
+                else // если null, то надо бы закрыть скобку
+                {
+                    if (layer != null)
+                    {
+                        OxyModel.Annotations.Add(new RectangleAnnotation
+                        {
+                            MinimumX = from_pos,
+                            MaximumX = to_pos,
+                            MinimumY = ymin,
+                            MaximumY = 0.1 * ymax,
+                            Fill = OxyColor.FromArgb(20, 20, 20, 20),
+                            StrokeThickness = 1,
+                            Text = layer
+                        });
+
+                        layer = null;
+                    }
+                }
+            }
+
+            if (layer != null)
+            {
+                OxyModel.Annotations.Add(new RectangleAnnotation
+                {
+                    MinimumX = from_pos,
+                    MaximumX = to_pos,
+                    MinimumY = ymin,
+                    MaximumY = 0.1 * ymax,
+                    Fill = OxyColor.FromArgb(20, 20, 20, 20),
+                    StrokeThickness = 1,
+                    Text = layer
+                });
+            }
+
 
             OxyModel.InvalidatePlot(true);
             OnPropertyChanged("OxyModel");
