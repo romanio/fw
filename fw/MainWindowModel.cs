@@ -45,8 +45,6 @@ namespace fw
                 Position = AxisPosition.Bottom,
                 StringFormat = "dd.MM.yyyy",
                 MajorGridlineStyle = LineStyle.Solid,
-                MinorGridlineStyle = LineStyle.Dot
-                
             });
 
             OxyModel.Axes.Add(new LinearAxis
@@ -54,19 +52,17 @@ namespace fw
                 Font = "Segoe UI",
                 Position = AxisPosition.Left,
                 MajorGridlineStyle = LineStyle.Solid,
-                MinorGridlineStyle = LineStyle.Dot
-
             });
 
          
             OxyModel.LegendFont = "Segoe UI";
             OxyModel.TitleFont = "Segoe UI";
-            OxyModel.TitleFontWeight = 10;
-            OxyModel.TitleFontSize = 14;
+            OxyModel.TitleFontSize = 12;
             OxyModel.Series.Add(new LineSeries { Title = "Oil", MarkerType=MarkerType.Circle });
             OxyModel.Series.Add(new LineSeries { Title = "Liquid", MarkerType = MarkerType.Circle});
+            OxyModel.Series.Add(new LineSeries { Title = "Injection", MarkerType = MarkerType.Circle });
         }
-        
+
         // Возвращает данные по одной скважине
 
         public Record[] GetWellData(string wellname, string layer)
@@ -218,6 +214,8 @@ namespace fw
 
             ((LineSeries)OxyModel.Series[0]).Points.Clear(); // Oil
             ((LineSeries)OxyModel.Series[1]).Points.Clear(); // Liquid
+            ((LineSeries)OxyModel.Series[2]).Points.Clear(); // Injection
+
             /*
             chart.Series[0].Points.Clear(); // Oil
             chart.Series[1].Points.Clear();
@@ -236,9 +234,10 @@ namespace fw
                 {
                     ((LineSeries)OxyModel.Series[0]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), 0)); // Oil
                     ((LineSeries)OxyModel.Series[1]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), 0));  // Liquid
+                    ((LineSeries)OxyModel.Series[2]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), 0));  // Injection
 
 
-                     Cells.Add(new object[3] { dates[it].ToShortDateString(), 0, 0});
+                    Cells.Add(new object[3] { dates[it].ToShortDateString(), 0, 0});
                     //chart.Series[2].Points.AddXY(model.dates[it], 0); // Water-Cut
                     //chart.Series[3].Points.AddXY(model.dates[it], 0); // Injection
                     //chart.Series[4].Points.AddXY(model.dates[it], 0); // BHP
@@ -252,6 +251,7 @@ namespace fw
                         {
                             ((LineSeries)OxyModel.Series[0]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), 0));
                             ((LineSeries)OxyModel.Series[1]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), 0));
+                            ((LineSeries)OxyModel.Series[2]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), 0));  // Injection
 
                             /*
                             chart.Series[1].Points.AddXY(model.dates[it], 0);
@@ -263,6 +263,7 @@ namespace fw
                         {
                             ((LineSeries)OxyModel.Series[0]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].oil / res[it].days));
                             ((LineSeries)OxyModel.Series[1]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].liquid / res[it].days));
+                            ((LineSeries)OxyModel.Series[2]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].winj / res[it].days));  // Injection
 
                             /*
 
@@ -276,6 +277,7 @@ namespace fw
                         Cells.Add(new object[3] { dates[it].ToShortDateString(), res[it].oil, res[it].liquid });
                         ((LineSeries)OxyModel.Series[0]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].oil));
                         ((LineSeries)OxyModel.Series[1]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].liquid));
+                        ((LineSeries)OxyModel.Series[2]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].winj));  // Injection
                         /*
 
                         chart.Series[1].Points.AddXY(model.dates[it], res[it].liquid);
@@ -290,14 +292,37 @@ namespace fw
                 }
             }
 
-            // Layer as Annotations
-
             OxyModel.Annotations.Clear();
- 
+
             double xmin = DateTimeAxis.ToDouble(dates[0]);
             double xmax = DateTimeAxis.ToDouble(dates.Last());
             double ymin = res.Min(c => c.liquid);
             double ymax = res.Max(c => c.liquid);
+
+            // Workover as Annotation
+
+            for (int it = 0; it < dates.Count; ++it)
+            {
+                if (res[it].gtm != null)
+                {
+                    if (res[it].gtm != "")
+                    {
+                        if (res[it].liquid > 0)
+                        {
+                            OxyModel.Annotations.Add(new LineAnnotation
+                            {
+                                Type = LineAnnotationType.Vertical,
+                                X = DateTimeAxis.ToDouble(dates[it]),
+                                MinimumY = res[it].liquid,
+                                Color = OxyColors.Chocolate,
+                                Text = res[it].gtm,
+                                FontSize = 11
+                            });
+                        }
+                    }
+                }
+            }
+            // Layer as Annotations
 
             string layer = null;
             double from_pos = 0;
@@ -306,7 +331,7 @@ namespace fw
 
             for (int it = 0; it < dates.Count; ++it)
             {
-                //System.Diagnostics.Debug.Write(res[it].layer);
+                //System.Diagnostics.Debug.Write(it +". " + res[it].layer + "  layer = " + layer + " ");
 
                 if (res[it].layer != null)
                 {
@@ -314,12 +339,14 @@ namespace fw
                     {
                         layer = res[it].layer;
                         from_pos = DateTimeAxis.ToDouble(dates[it]);
+                        //System.Diagnostics.Debug.Write("from_pos" + from_pos + " ");
                     }
                     else // не первая встреча
                     {
                         if (res[it].layer == layer) // тот-же пласт
                         {
                             to_pos = DateTimeAxis.ToDouble(dates[it]);
+                            //System.Diagnostics.Debug.Write("to_pos" + to_pos + " ");
                         }
                         else // какой-то другой пласт
                         {
@@ -334,8 +361,11 @@ namespace fw
                                 Text = layer
                             });
 
+                            //System.Diagnostics.Debug.Write("#1 draw[" + from_pos + ";" + to_pos + "]  ");
+
                             layer = res[it].layer;
                             from_pos = DateTimeAxis.ToDouble(dates[it]);
+                            //System.Diagnostics.Debug.Write("from_pos " + from_pos  + "  ");
                         }
                     }
                 }
@@ -343,6 +373,9 @@ namespace fw
                 {
                     if (layer != null)
                     {
+                        to_pos = DateTimeAxis.ToDouble(dates[it]);
+                        //System.Diagnostics.Debug.Write("#2 draw[" + from_pos + ";" + to_pos + "]  ");
+
                         OxyModel.Annotations.Add(new RectangleAnnotation
                         {
                             MinimumX = from_pos,
@@ -357,6 +390,7 @@ namespace fw
                         layer = null;
                     }
                 }
+                //System.Diagnostics.Debug.WriteLine("");
             }
 
             if (layer != null)
