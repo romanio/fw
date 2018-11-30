@@ -13,7 +13,10 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MahApps.Metro.Controls;
-using System.Windows.Forms.DataVisualization.Charting;
+
+using OpenTK;
+using OpenTK.Graphics;
+using OpenTK.Graphics.OpenGL4;
 
 namespace fw
 {
@@ -23,11 +26,14 @@ namespace fw
     public partial class MainWindow : MetroWindow
     {
         MainWindowModel model = new MainWindowModel();
+        GLControl glControl = null;
 
         public MainWindow()
         {
             DataContext = model;
             InitializeComponent();
+            glControl = new GLControl(GraphicsMode.Default, 3, 3, GraphicsContextFlags.Default);
+            HostGL.Child = glControl;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -72,6 +78,7 @@ namespace fw
             if (SelectedWells.Count == 0) return;
 
             model.UpdateChart(SelectedLayers, SelectedWells);
+        }
 
             // Generate chart title
 
@@ -118,59 +125,129 @@ namespace fw
                     }
                 }
             }
-
-            // Layers
-
-            double from_pos = 0;
-            double to_pos = 0;
-
-            string layer = null;
-
-            chart.ChartAreas[0].AxisX.CustomLabels.Clear();
-
-            for (int it = 0; it < model.dates.Count; ++it)
-            {
-                if (res[it] != null)
-                {
-                    if (layer == null) // Первая встреча
-                    {
-                        layer = res[it].layer;
-                        from_pos = model.dates[it].ToOADate();
-                    }
-                    else // Не первая встреча
-                    {
-                        if (res[it].layer == layer) // Тот-же пласт
-                        {
-                            to_pos = model.dates[it].ToOADate();
-                        }
-                        else // Какой-то другой пласт
-                        {
-                            chart.ChartAreas[0].AxisX.CustomLabels.Add(from_pos, to_pos, layer, 1, LabelMarkStyle.LineSideMark);
-                            layer = res[it].layer;
-                            from_pos = model.dates[it].ToOADate();
-                        }
-                    }
-                }
-                else // Если null, то надо закрывать скобку
-                {
-                    if (layer != null)
-                    {
-                        chart.ChartAreas[0].AxisX.CustomLabels.Add(from_pos, to_pos, layer, 1, LabelMarkStyle.LineSideMark);
-                        layer = null;
-                    }
-                }
-            }
-
-            if (layer != null)
-            {
-                chart.ChartAreas[0].AxisX.CustomLabels.Add(from_pos, to_pos, layer, 1, LabelMarkStyle.LineSideMark);
-            }
-            */
         }
+        */
         
         private void checkRates_Click(object sender, RoutedEventArgs e)
         {
             UpdateChart();
         }
+
+        private int CompileShaders()
+        {
+            var vertexShader = GL.CreateShader(ShaderType.VertexShader);
+            GL.ShaderSource(vertexShader, VertexShader);
+            GL.CompileShader(vertexShader);
+
+            var fragmentShader = GL.CreateShader(ShaderType.FragmentShader);
+            GL.ShaderSource(fragmentShader, FragmentShader);
+            GL.CompileShader(fragmentShader);
+
+            var program = GL.CreateProgram();
+            GL.AttachShader(program, vertexShader);
+            GL.AttachShader(program, fragmentShader);
+            GL.LinkProgram(program);
+
+            GL.DetachShader(program, vertexShader);
+            GL.DetachShader(program, fragmentShader);
+            GL.DeleteShader(vertexShader);
+            GL.DeleteShader(fragmentShader);
+
+            return program;
+        }
+
+        private void GlControl_Resize(object sender, EventArgs e)
+        {
+            GL.Viewport(glControl.Size);
+            GlControl_Paint(null, null);
+        }
+
+        int _program;
+        int _vertexArray;
+        float[] vertices = new float[] { 0.5f, -0.5f, 0.0f, 0.5f, -0.5f, 0.0f, 0.0f, 0.5f, 0.0f };
+        int VBO, VAO;
+
+        private void GlControl_Load(object sender, EventArgs e)
+        {
+            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            _program = CompileShaders();
+            System.Diagnostics.Debug.WriteLine(GL.GetProgramInfoLog(_program));
+
+            GL.GenVertexArrays(1, out VAO);
+            GL.GenBuffers(1, out VBO);
+
+            // bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+            GL.BindVertexArray(VAO);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VBO);
+            GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float) * 3, vertices, BufferUsageHint.StaticDraw);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), IntPtr.Zero);
+            GL.EnableVertexAttribArray(0);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+
+            /*
+            GL.GenVertexArrays(1, out _vertexArray);
+            GL.BindVertexArray(_vertexArray);
+
+            Title = "OpenGL Version " + GL.GetString(StringName.Version) + " " + _program;
+            */
+
+        }
+
+        private void GlControl_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+        {
+            double _time = DateTime.Now.Second * 0.1;
+
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.UseProgram(_program);
+            GL.PointSize(10);
+
+            GL.VertexAttrib1(0, _time);
+            Vector4 position;
+            position.X = (float)Math.Sin(_time) * 0.5f;
+            position.Y = (float)Math.Cos(_time) * 0.5f;
+            position.Z = 0.0f;
+            position.W = 1.0f;
+            GL.VertexAttrib4(1, position);
+
+            GL.DrawArrays(PrimitiveType.Points, 0, 1);
+            glControl.SwapBuffers();
+        }
+
+        string VertexShader =
+    "#version 330 core\n" +
+    "\n" +
+    "layout (location=0) in float time;\n" +
+    "layout (location=1) in vec4 position;\n" +
+    "out vec4 frag_color;\n" +
+    "void main(void)\n" +
+    "{\n" +
+    "  gl_Position = position;\n" +
+    "  frag_color = vec4(sin(time) * 0.5 + 0.5, cos(time) * 0.5 + 0.5, 0.0, 0.0);\n" +
+    "}\n";
+
+        string FragmentShader =
+            "#version 330 core\n" +
+            "in vec4 frag_color;\n" +
+            "out vec4 color;\n" +
+            "\n" +
+            "void main(void)\n" +
+            "{\n" +
+            "   color = frag_color;\n" +
+            "}\n";
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            GL.DeleteVertexArrays(1, ref _vertexArray);
+            GL.DeleteProgram(_program);
+        }
+
+        private void HostGL_KeyDown(object sender, KeyEventArgs e)
+        {
+            GlControl_Paint(null, null);
+        }
     }
+
 }
+

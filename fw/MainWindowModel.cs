@@ -12,6 +12,8 @@ using System.Data;
 using System.Collections;
 using System.Collections.ObjectModel;
 
+
+
 namespace fw
 {
     class MainWindowModel : INotifyPropertyChanged
@@ -53,6 +55,9 @@ namespace fw
                 Position = AxisPosition.Left,
                 MajorGridlineStyle = LineStyle.Solid,
             });
+
+            OxyModel.LegendPosition = LegendPosition.RightTop;
+            OxyModel.LegendPlacement = LegendPlacement.Outside;
 
          
             OxyModel.LegendFont = "Segoe UI";
@@ -296,8 +301,8 @@ namespace fw
 
             double xmin = DateTimeAxis.ToDouble(dates[0]);
             double xmax = DateTimeAxis.ToDouble(dates.Last());
-            double ymin = res.Min(c => c.liquid);
-            double ymax = res.Max(c => c.liquid);
+            double ymin = Math.Min(res.Min(c => c.liquid), res.Min(c => c.winj));
+            double ymax = Math.Max(res.Max(c => c.liquid), res.Max(c => c.winj));
 
             // Workover as Annotation
 
@@ -339,7 +344,7 @@ namespace fw
                     {
                         layer = res[it].layer;
                         from_pos = DateTimeAxis.ToDouble(dates[it]);
-                        //System.Diagnostics.Debug.Write("from_pos" + from_pos + " ");
+                       // System.Diagnostics.Debug.Write("from_pos" + from_pos + " ");
                     }
                     else // не первая встреча
                     {
@@ -350,6 +355,8 @@ namespace fw
                         }
                         else // какой-то другой пласт
                         {
+                            to_pos = DateTimeAxis.ToDouble(dates[it]);
+
                             OxyModel.Annotations.Add(new RectangleAnnotation
                             {
                                 MinimumX = from_pos,
@@ -390,7 +397,7 @@ namespace fw
                         layer = null;
                     }
                 }
-                //System.Diagnostics.Debug.WriteLine("");
+                System.Diagnostics.Debug.WriteLine("");
             }
 
             if (layer != null)

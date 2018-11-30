@@ -70,7 +70,17 @@
                 </Grid>
 
             </TabItem>
-
+            <TabItem Header="Map">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <WindowsFormsHost x:Name="HostGL"/>
+                </Grid>
+            </TabItem>
         </TabControl>
 
 
