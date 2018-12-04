@@ -41,6 +41,8 @@ namespace fw
         {
             OxyModel = new OxyPlot.PlotModel();
 
+            OxyModel.Axes.Clear();
+
             OxyModel.Axes.Add(new DateTimeAxis
             {
                 Font = "Segoe UI",
@@ -53,7 +55,9 @@ namespace fw
             {
                 Font = "Segoe UI",
                 Position = AxisPosition.Left,
-                MajorGridlineStyle = LineStyle.Solid,
+                AxislineStyle = LineStyle.Solid,
+                AxislineThickness = 1,
+                MajorGridlineStyle = LineStyle.Solid
             });
 
             OxyModel.LegendPosition = LegendPosition.RightTop;
@@ -266,6 +270,7 @@ namespace fw
                         
                         else
                         {
+                            Cells.Add(new object[3] { dates[it].ToShortDateString(), res[it].oil/res[it].days, res[it].liquid/res[it].days });
                             ((LineSeries)OxyModel.Series[0]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].oil / res[it].days));
                             ((LineSeries)OxyModel.Series[1]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].liquid / res[it].days));
                             ((LineSeries)OxyModel.Series[2]).Points.Add(new DataPoint(DateTimeAxis.ToDouble(dates[it]), res[it].winj / res[it].days));  // Injection
@@ -301,8 +306,20 @@ namespace fw
 
             double xmin = DateTimeAxis.ToDouble(dates[0]);
             double xmax = DateTimeAxis.ToDouble(dates.Last());
-            double ymin = Math.Min(res.Min(c => c.liquid), res.Min(c => c.winj));
-            double ymax = Math.Max(res.Max(c => c.liquid), res.Max(c => c.winj));
+
+            double ymin = 0;
+            double ymax = 0;
+
+            if (IsRateProduction)
+            {
+                ymin = Math.Min(res.Min(c => c.days > 0 ? c.liquid/c.days : 0), res.Min(c => c.days > 0 ? c.winj/c.days : 0));
+                ymax = Math.Max(res.Max(c => c.days > 0 ? c.liquid/c.days : 0), res.Max(c => c.days > 0 ? c.winj/c.days : 0));
+            }
+            else
+            {
+                ymin = Math.Min(res.Min(c => c.liquid), res.Min(c => c.winj));
+                ymax = Math.Max(res.Max(c => c.liquid), res.Max(c => c.winj));
+            }
 
             // Workover as Annotation
 
@@ -318,8 +335,23 @@ namespace fw
                             {
                                 Type = LineAnnotationType.Vertical,
                                 X = DateTimeAxis.ToDouble(dates[it]),
-                                MinimumY = res[it].liquid,
+                                MinimumY = IsRateProduction?(res[it].liquid/res[it].days) : res[it].liquid,
                                 Color = OxyColors.Chocolate,
+                                LineStyle = LineStyle.LongDash,
+                                Text = res[it].gtm,
+                                FontSize = 11
+                            });
+                        }
+
+                        if (res[it].winj > 0)
+                        {
+                            OxyModel.Annotations.Add(new LineAnnotation
+                            {
+                                Type = LineAnnotationType.Vertical,
+                                X = DateTimeAxis.ToDouble(dates[it]),
+                                MinimumY = IsRateProduction ? (res[it].winj / res[it].days) : res[it].winj,
+                                Color = OxyColors.Chocolate,
+                                LineStyle = LineStyle.LongDash,
                                 Text = res[it].gtm,
                                 FontSize = 11
                             });

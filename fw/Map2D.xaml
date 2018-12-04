@@ -15,7 +15,7 @@
             <ColumnDefinition/>
             <ColumnDefinition/>
         </Grid.ColumnDefinitions>
-        <Button x:Name="button" Grid.Column="1" Grid.Row="1" Content="Press me"/>
-        <Image x:Name="image" Grid.Column="0" Grid.Row="0"/>
+        <Button x:Name="button" Grid.Column="1" Grid.Row="1" Content="Press me" Click="button_Click"/>
+        <WindowsFormsHost x:Name="HostGL"/>
     </Grid>
 </UserControl>

@@ -14,9 +14,6 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using MahApps.Metro.Controls;
 
-using OpenTK;
-using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL4;
 
 namespace fw
 {
@@ -26,14 +23,14 @@ namespace fw
     public partial class MainWindow : MetroWindow
     {
         MainWindowModel model = new MainWindowModel();
-        GLControl glControl = null;
+
 
         public MainWindow()
         {
             DataContext = model;
             InitializeComponent();
-            glControl = new GLControl(GraphicsMode.Default, 3, 3, GraphicsContextFlags.Default);
-            HostGL.Child = glControl;
+            //glControl = new GLControl(GraphicsMode.Default, 3, 3, GraphicsContextFlags.Default);
+            //HostGL.Child = glControl;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -80,59 +77,60 @@ namespace fw
             model.UpdateChart(SelectedLayers, SelectedWells);
         }
 
-            // Generate chart title
+        // Generate chart title
 
-            /*
-            if (checkRates.IsChecked.Value)
+        /*
+        if (checkRates.IsChecked.Value)
+        {
+            chart.ChartAreas[0].AxisY.Title = "[m3/day]";
+        }
+        else
+        {
+            chart.ChartAreas[0].AxisY.Title = "[m3]";
+        }
+
+
+        //
+        chart.ChartAreas[0].AxisY.Minimum = double.NaN;
+        chart.ChartAreas[0].AxisY.Maximum = double.NaN;
+        chart.ChartAreas[0].AxisX.Minimum = double.NaN;
+        chart.ChartAreas[0].AxisX.Maximum = double.NaN;
+        chart.ChartAreas[0].RecalculateAxesScale();
+
+
+        // GTM
+        for (int it = 0; it < model.dates.Count; ++it)
+        {
+            if (res[it] != null)
             {
-                chart.ChartAreas[0].AxisY.Title = "[m3/day]";
-            }
-            else
-            {
-                chart.ChartAreas[0].AxisY.Title = "[m3]";
-            }
-
-
-            //
-            chart.ChartAreas[0].AxisY.Minimum = double.NaN;
-            chart.ChartAreas[0].AxisY.Maximum = double.NaN;
-            chart.ChartAreas[0].AxisX.Minimum = double.NaN;
-            chart.ChartAreas[0].AxisX.Maximum = double.NaN;
-            chart.ChartAreas[0].RecalculateAxesScale();
-
-
-            // GTM
-            for (int it = 0; it < model.dates.Count; ++it)
-            {
-                if (res[it] != null)
+                if (res[it].gtm != null)
                 {
-                    if (res[it].gtm != null)
+                    if (res[it].liquid > 0)
                     {
-                        if (res[it].liquid > 0)
-                        {
-                            chart.Series[1].Points[it].MarkerStyle = MarkerStyle.Circle;
-                            chart.Series[1].Points[it].MarkerSize = 7;
-                            chart.Series[1].Points[it].MarkerColor = System.Drawing.Color.LawnGreen;
-                            chart.Series[1].Points[it].Label = res[it].gtm;
-                        }
-                        if (res[it].winj > 0)
-                        {
-                            chart.Series[3].Points[it].MarkerStyle = MarkerStyle.Circle;
-                            chart.Series[3].Points[it].MarkerSize = 7;
-                            chart.Series[3].Points[it].MarkerColor = System.Drawing.Color.LawnGreen;
-                            chart.Series[3].Points[it].Label = res[it].gtm;
-                        }
+                        chart.Series[1].Points[it].MarkerStyle = MarkerStyle.Circle;
+                        chart.Series[1].Points[it].MarkerSize = 7;
+                        chart.Series[1].Points[it].MarkerColor = System.Drawing.Color.LawnGreen;
+                        chart.Series[1].Points[it].Label = res[it].gtm;
+                    }
+                    if (res[it].winj > 0)
+                    {
+                        chart.Series[3].Points[it].MarkerStyle = MarkerStyle.Circle;
+                        chart.Series[3].Points[it].MarkerSize = 7;
+                        chart.Series[3].Points[it].MarkerColor = System.Drawing.Color.LawnGreen;
+                        chart.Series[3].Points[it].Label = res[it].gtm;
                     }
                 }
             }
         }
-        */
-        
+    }
+    */
+
         private void checkRates_Click(object sender, RoutedEventArgs e)
         {
             UpdateChart();
         }
 
+        /*
         private int CompileShaders()
         {
             var vertexShader = GL.CreateShader(ShaderType.VertexShader);
@@ -192,62 +190,63 @@ namespace fw
 
             Title = "OpenGL Version " + GL.GetString(StringName.Version) + " " + _program;
             */
-
-        }
-
-        private void GlControl_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
-        {
-            double _time = DateTime.Now.Second * 0.1;
-
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.UseProgram(_program);
-            GL.PointSize(10);
-
-            GL.VertexAttrib1(0, _time);
-            Vector4 position;
-            position.X = (float)Math.Sin(_time) * 0.5f;
-            position.Y = (float)Math.Cos(_time) * 0.5f;
-            position.Z = 0.0f;
-            position.W = 1.0f;
-            GL.VertexAttrib4(1, position);
-
-            GL.DrawArrays(PrimitiveType.Points, 0, 1);
-            glControl.SwapBuffers();
-        }
-
-        string VertexShader =
-    "#version 330 core\n" +
-    "\n" +
-    "layout (location=0) in float time;\n" +
-    "layout (location=1) in vec4 position;\n" +
-    "out vec4 frag_color;\n" +
-    "void main(void)\n" +
-    "{\n" +
-    "  gl_Position = position;\n" +
-    "  frag_color = vec4(sin(time) * 0.5 + 0.5, cos(time) * 0.5 + 0.5, 0.0, 0.0);\n" +
-    "}\n";
-
-        string FragmentShader =
-            "#version 330 core\n" +
-            "in vec4 frag_color;\n" +
-            "out vec4 color;\n" +
-            "\n" +
-            "void main(void)\n" +
-            "{\n" +
-            "   color = frag_color;\n" +
-            "}\n";
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            GL.DeleteVertexArrays(1, ref _vertexArray);
-            GL.DeleteProgram(_program);
-        }
-
-        private void HostGL_KeyDown(object sender, KeyEventArgs e)
-        {
-            GlControl_Paint(null, null);
-        }
+        /*
     }
 
+    private void GlControl_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+    {
+        double _time = DateTime.Now.Second * 0.1;
+
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        GL.UseProgram(_program);
+        GL.PointSize(10);
+
+        GL.VertexAttrib1(0, _time);
+        Vector4 position;
+        position.X = (float)Math.Sin(_time) * 0.5f;
+        position.Y = (float)Math.Cos(_time) * 0.5f;
+        position.Z = 0.0f;
+        position.W = 1.0f;
+        GL.VertexAttrib4(1, position);
+
+        GL.DrawArrays(PrimitiveType.Points, 0, 1);
+        glControl.SwapBuffers();
+    }
+
+    string VertexShader =
+"#version 330 core\n" +
+"\n" +
+"layout (location=0) in float time;\n" +
+"layout (location=1) in vec4 position;\n" +
+"out vec4 frag_color;\n" +
+"void main(void)\n" +
+"{\n" +
+"  gl_Position = position;\n" +
+"  frag_color = vec4(sin(time) * 0.5 + 0.5, cos(time) * 0.5 + 0.5, 0.0, 0.0);\n" +
+"}\n";
+
+    string FragmentShader =
+        "#version 330 core\n" +
+        "in vec4 frag_color;\n" +
+        "out vec4 color;\n" +
+        "\n" +
+        "void main(void)\n" +
+        "{\n" +
+        "   color = frag_color;\n" +
+        "}\n";
+
+    private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    {
+        GL.DeleteVertexArrays(1, ref _vertexArray);
+        GL.DeleteProgram(_program);
+    }
+
+    private void HostGL_KeyDown(object sender, KeyEventArgs e)
+    {
+        GlControl_Paint(null, null);
+    }
+}
+*/
+    }
 }
 
