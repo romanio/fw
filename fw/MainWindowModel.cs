@@ -12,8 +12,6 @@ using System.Data;
 using System.Collections;
 using System.Collections.ObjectModel;
 
-
-
 namespace fw
 {
     class MainWindowModel : INotifyPropertyChanged
